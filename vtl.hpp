@@ -78,9 +78,10 @@ CREATE_COMPARABLE_OPERATORS( MACRO )
 using std::enable_if;
 using std::forward;
 using std::get;
-using std::decay;
 using std::make_tuple;
 
+template<class T>
+using Decay = typename std::decay<T>::type;
 
 template<class op>
 struct Fold
@@ -139,6 +140,10 @@ struct Sym{
 
   constexpr T operator()(...)const{ return value;}
   constexpr operator T()const{ return value; }
+
+  constexpr auto operator!()const{ return Sym<decltype(!v),!v>(); }
+  constexpr auto operator+()const{ return Sym<decltype(+v),v>(); }
+  constexpr auto operator-()const{ return Sym<decltype(-v),v>(); }
 };
 
 
@@ -152,7 +157,7 @@ CREATE_ALL_OPERATORS(CREATE_SYM_OP)
 template<int v>
 using Z = Sym<int,v>;
 
-template<int v>
+template<uint v>
 using N = Sym<uint,v>;
 
 template<char...X> constexpr auto operator "" _Z(){
@@ -206,9 +211,11 @@ struct Extractor{
 
 };
 
-template<class...> struct List{
+template<class...X> struct List{
+    using type = List<X...>;
     constexpr List(...){}
 };
+
 
 
 template<uint i,class...T>
@@ -245,7 +252,7 @@ struct ListExtractor{
 
 
     template<class L>
-    using type = typename get<typename std::decay<L>::type>::type;
+    using type = typename get<Decay<L>>::type;
 
     template<class L>
     constexpr auto operator()(L){
@@ -318,6 +325,7 @@ template<int...I>
 using Min = typename Min_t<I...>::type;
 
 
+
 template<class L>
 struct Count_t {
     using type = Z<0>;
@@ -328,8 +336,10 @@ struct Count_t<T<x...>> {
     using type = Z<sizeof...(x)>;
 };
 
+
+
 template<class L>
-using Count = typename Count_t<typename std::decay<L>::type>::type;
+using Count = typename Count_t<Decay<L>>::type;
 
 template<class L>
 constexpr auto count(L){ return Count<L>();}
@@ -338,8 +348,9 @@ constexpr auto count(L){ return Count<L>();}
 
 template<class L,class F>
 constexpr auto listFold(L,F){
-    return listFold(L(),F(), range(0_Z,count<L>()) );
+    return listFold(L(),F(), range(Z<0>(),count<L>()) );
 }
+
 
 
 
@@ -365,11 +376,13 @@ struct Prepend_t<L<X...>,E>{
     using type = L<E,X...>;
 };
 
-template<class L,class E>
-using Append = typename Append_t<typename std::decay<L>::type,E>::type;
+
 
 template<class L,class E>
-using Prepend = typename Prepend_t<typename std::decay<L>::type,E>::type;
+using Append = typename Append_t<Decay<L>,E>::type;
+
+template<class L,class E>
+using Prepend = typename Prepend_t<Decay<L>,E>::type;
 
 
 template<class L,class E, template<class,class> class Extender, bool append=false>
@@ -383,8 +396,10 @@ struct ExtendIF_t<L,E,Extender,true> {
 };
 
 
+
+
 template<class L,class E,template<class,class> class Extender,bool cond>
-using ExtendIF = typename ExtendIF_t<typename std::decay<L>::type,E,Extender,cond>::type;
+using ExtendIF = typename ExtendIF_t<Decay<L>,E,Extender,cond>::type;
 
 template<class L,class E,bool cond>
 using AppendIF = ExtendIF<L,E,Append,cond>;
@@ -394,18 +409,17 @@ template<class L,class E,bool cond>
 using PrependIF = ExtendIF<L,E,Prepend,cond>;
 
 
-
 template<class C, class Result=List<>, uint I = (uint)count(C())-1>
-struct BitMask2Idx_t : BitMask2Idx_t<C,PrependIF<Result,Z<I>,(uint)Get<C,I>()>,I-1>{};
+struct BitMask2Idx_t : BitMask2Idx_t<C,PrependIF<Result,Z<I>,!!Get<C,I>()>,I-1>{};
 
 template<class C,class Result>
 struct BitMask2Idx_t<C,Result,0> {
-    using type = PrependIF<Result,Z<0>,(bool)Get<C,0>()>;
+    using type = PrependIF<Result,Z<0>,!!Get<C,0>()>;
 };
 
 
 template<class L>
-using BitMask2Idx = typename BitMask2Idx_t<typename std::decay<L>::type>::type;
+using BitMask2Idx = typename BitMask2Idx_t<Decay<L>>::type;
 
 template<class L>
 constexpr auto bitmask2Idx(L){
@@ -413,6 +427,18 @@ constexpr auto bitmask2Idx(L){
 }
 
 
+template<class L,class idx>
+struct Copy_t{
+    using type = List<>;
+};
+
+template<class L,template<class...> class R,class...I>
+struct Copy_t<L,R<I...>>{
+    using type = List< Get<L,I::value%Count<L>()>... >;
+};
+
+template<class L,class R>
+using Copy = typename Copy_t<Decay<L>, Decay<R>> ::type;
 
 
 
@@ -479,12 +505,169 @@ struct Concat_t<L0,L...> : Concat_t<L0,typename Concat_t<L...>::type>::type
 
 
 template<class...L>
-using Concat = typename Concat_t<typename decay<L>::type...>::type;
+using Concat = typename Concat_t<Decay<L>...>::type;
 
 template<class...L>
 constexpr auto listConcat(L...){
     return Concat<L...>();
 }
+
+
+
+
+template<class T,
+         class L,
+         template<class,class> class P=std::is_same>
+struct IndexOf_t{
+    using Bitmask = List<>;
+    using type = List<>;
+};
+
+template<class T,
+         template<class,class> class P,
+         template<class...>class L,
+         class...l>
+struct IndexOf_t<T,L<l...>,P>{
+    using Bitmask = List<Z<P<T,l>::value>...>;
+    using type = BitMask2Idx<Bitmask>;
+};
+
+template<class T,class L, template<class,class> class P=std::is_same>
+using IndexOf = typename IndexOf_t<T,Decay<L>,P>::type;
+
+template<class L,
+         class R,
+         template<class,class> class P=std::is_same>
+struct Find_t{
+    using Bitmask = List<>;
+    using idx = List<>;
+    using type = List<>;
+};
+
+
+template<template<class,class> class P,
+         template<class...>class L,
+         template<class...>class R,
+         class...l,
+         class...r>
+struct Find_t<L<l...>,R<r...>,P>{
+    using Bitmask = List<Count< IndexOf< r, L<l...>,P >>...>;
+    using idx = BitMask2Idx<Bitmask>;
+    using type = Copy< R<r...> , idx >;
+};
+
+
+template<class L,class R, template<class,class> class P=std::is_same>
+using FindIdx= typename Find_t<Decay<L>,Decay<R>,P>::idx;
+
+template<class L,class R, template<class,class> class P=std::is_same>
+using Find= typename Find_t<Decay<L>,Decay<R>,P>::type;
+
+template<class L,class R>
+struct Zip_t{
+    using type=List<>;
+};
+
+template<template<class...>class L,template<class...>class R,class...l,class...r>
+struct Zip_t<L<l...>,R<r...>>{
+    using type=List<List<l,r>...>;
+};
+
+template<class L,class R>
+using Zip= typename Zip_t<Decay<L> , Decay<R> >::type;
+
+template<class L>
+using Enumerate = Zip< Range<0 , Count<L>::value >, Decay<L>>;
+
+template< template<class,class>class P>
+struct checkTail{
+
+    template<class L,class R>
+    struct test{
+        using type = Z<0>;
+    };
+
+    template<template<class...>class L,template<class...>class R,class V1,class T1,class V2,class T2>
+    struct test< L<V1,T1> , R<V2,T2> >{
+        using type = Z< P<T1,T2>::value && (V1()>=V2())>;
+    };
+
+    template<class T,class U>
+    using type= typename test<Decay<T>,Decay<U>>::type;
+};
+
+
+
+
+
+template<class L,
+         template<class,class> class P=std::is_same>
+struct Distinct_t{
+    using Bitmask = List<>;
+    using idx = List<>;
+    using type = List<>;
+};
+
+
+template<template<class,class> class P,
+         template<class...>class L,
+         class...l>
+struct Distinct_t<L<l...>,P>{
+    using Bitmask = List<Z<(Count<IndexOf<l, L<l...>,P>>()<2)>...>;
+    using idx = BitMask2Idx<Bitmask>;
+    using type = Copy< L<l...> , idx >  ;
+};
+
+
+
+
+
+template<class L,template<class,class> class P=std::is_same>
+using Distinct = typename Distinct_t< Decay<L> , P >::type;
+
+template<class L,template<class,class> class P=std::is_same>
+using DistinctIdx = typename Distinct_t< Decay<L>, P >::idx;
+
+template<class L,template<class,class>class P=std::is_same>
+using UniqueIdx= DistinctIdx< Enumerate<L>, checkTail<P>::template type >;
+
+template<class L,template<class,class>class P=std::is_same>
+using Unique= Copy<L,UniqueIdx<L,P> >;
+
+template<class L,class Set,template<class,class> class P=std::is_same>
+using Complement = Unique< Concat<L,Set> , P >;
+
+template<class L,class Set,template<class,class> class P=std::is_same>
+using ComplementIdx = UniqueIdx< Concat<L,Set> , P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using Union = Unique< Concat<L,R> , P >;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using UnionIdx = UniqueIdx< Concat<L,R>, P >;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using Meet = Find<L,R,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using MeetIdx = FindIdx<L,R,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using Diff = Complement< Find<L,R,P>,L,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using DiffIdx = ComplementIdx< Find<L,R,P> , L ,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using SymDiff = Complement< Meet<L,R,P>  , Union<L,R,P> ,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using SymDiffIdx = ComplementIdx< Meet<L,R,P>  , Union<L,R,P> ,P>;
+
+
+
+
+
 
 
 template<class T,class F,template<class...>class range, class...I>
@@ -494,7 +677,7 @@ constexpr auto tupleCall(T&&tup,F&&f, range<I...> ){
 
 template<class T,class F>
 constexpr auto tupleCall(T&&tup,F&&f){
-    return tupleCall( std::forward<T>(tup) , std::forward<F>(f) , range(0_Z, count(tup) ) );
+    return tupleCall( std::forward<T>(tup) , std::forward<F>(f) , range(count(tup) ) );
 }
 
 template<class T,class C>
@@ -509,7 +692,7 @@ constexpr auto tupleMap(T&&tup,F&&f, range<I...> ){
 
 template<class T,class F>
 constexpr auto tupleMap(T&&tup,F&&f){
-    return tupleMap( std::forward<T>(tup) , std::forward<F>(f) , range(0_Z,count(tup)) );
+    return tupleMap( std::forward<T>(tup) , std::forward<F>(f) , range(count(tup)) );
 }
 
 
@@ -521,7 +704,7 @@ constexpr void tupleForeach(T&&tup,F&&f, range<I...> ){
 
 template<class T,class F>
 constexpr void tupleForeach(T&&tup,F&&f){
-    tupleForeach( std::forward<T>(tup) , std::forward<F>(f) , range(0_Z,count(tup)) );
+    tupleForeach( std::forward<T>(tup) , std::forward<F>(f) , range(count(tup)) );
 }
 
 
@@ -562,7 +745,7 @@ struct tupleAdapter{
 
     template<class T>
     constexpr auto operator()(T&&tup)const{
-        return tupleApply( forward<T>(tup) , f );
+        return tupleCall( forward<T>(tup) , f );
     }
 };
 
