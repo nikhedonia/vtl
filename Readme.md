@@ -61,5 +61,6 @@ constexpr auto t6 = tupleKeep( t1, NumList<1,0,1>() ); // NumList acts as a Bitm
 
 ```
 
+More examples can be found in the test folder.
 
   
