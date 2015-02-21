@@ -70,6 +70,7 @@ Describe(vtlTestcase)
       Assert::That( is_same<Concat<L0,L1a,L0,L1b,L0>,L2>::value );  
     };
 
+
     It(should_be_searchable){
       using needle1 = int;
       using needle2 = float;
@@ -106,7 +107,12 @@ Describe(vtlTestcase)
       Assert::That(is_same< Zip<L1,L2>,L3>::value);
       Assert::That(is_same< Enumerate<L2> , L3 >::value);
     };
+
+    /* ToDO : write tests for  Set(Union/meet/complement) operations and "idx" and "bits" variants */
+
+
   };  
+
 
   Describe(TupleTests){
 
@@ -225,6 +231,8 @@ Describe(vtlTestcase)
       tupleCall(tiedInts,[](auto& a,auto& b){
         a=b=42;
       });
+
+      Assert::That( get<1>(tup), Equals(42) );
 
     };
 
