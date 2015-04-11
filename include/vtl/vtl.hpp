@@ -125,12 +125,12 @@ struct BinaryOp<CHAR(OP)>\
 CREATE_ALL_OPERATORS(CREATE_BinaryOP_struct)
 
 
-/*
+
 template<uint op>
 constexpr auto BinaryFold = Fold<BinaryOp<op>>();
 
 #define BinFold(OP) BinaryFold<CHAR(OP)>
-*/
+
 
 template<class T, T v>
 struct Sym{
@@ -413,7 +413,7 @@ template<class L,class E,bool cond>
 using PrependIF = ExtendIF<L,E,Prepend,cond>;
 
 
-template<class C, class Result=List<>, uint I = ((uint)count(C())?:1) -1>
+template<class C, class Result=List<>, uint I = ((uint)count(C())?(uint)count(C()):1) -1>
 struct Bits2Idx_t : Bits2Idx_t<C,PrependIF<Result,Z<I>,!!Get<C,I>()>,I-1>{};
 
 
@@ -433,20 +433,33 @@ constexpr auto bits2Idx(L){
 }
 
 
-template<class L,class idx>
+template<
+  class L,
+  class idx, 
+  template<class...>class Dest=List >
 struct Copy_t{
-    using type = List<>;
+    using type = Dest<>;
 };
 
-template<template<class...> class L,template<class...> class R,class...I,class l0,class...l>
-struct Copy_t<L<l0,l...>,R<I...>>{
-    using type = List< Get<L<l0,l...>,I::value%Count<L<l0,l...>>()>... >;
+template<
+  template<class...> class L,
+  template<class...> class R,
+  template<class...> class D,
+  class...I,
+  class l0,
+  class...l>
+struct Copy_t<L<l0,l...>,R<I...>,D>{
+    using type = D< 
+      Get<L<l0,l...>,
+        I::value%Count<L<l0,l...>>()
+      >... 
+    >;
 };
 
 
 
-template<class L,class R>
-using Copy = typename Copy_t<Decay<L>, Decay<R>> ::type;
+template<class L,class I, template<class...>class Dest=List>
+using Copy = typename Copy_t<Decay<L>, Decay<I>,Dest> ::type;
 
 
 
@@ -610,21 +623,46 @@ using Zip= typename Zip_t<Decay<L> , Decay<R> >::type;
 template<class L>
 using Enumerate = Zip< Range<0 , Count<L>::value >, Decay<L>>;
 
-template< template<class,class>class P>
-struct checkTail{
+template<
+  class U,
+  template<class,class>class P=std::is_same>
+struct Unique_t{
 
-    template<class L,class R>
-    struct test{
-        using type = Z<0>;
+    template<class L,class B=List<>,class D=List<>>
+    struct find{
+      using type = B;
     };
 
-    template<template<class...>class L,template<class...>class R,class V1,class T1,class V2,class T2>
-    struct test< L<V1,T1> , R<V2,T2> >{
-        using type = Z< P<T1,T2>::value && (V1()>=V2())>;
-    };
+    template< 
+      template<class...>class L, 
+      template<class...>class B, 
+      template<class...>class D,
+      class l0,class...l,
+      class...b,
+      class...d>
+    struct find< L<l0,l...>, B<b...>, D<d...> >
+      : find< L<l...>, 
+              B<b..., N<!BinFold(+)(P<l0,d>::value...)> >,
+              D<d...,l0>>
+    {};
 
-    template<class T,class U>
-    using type= typename test<Decay<T>,Decay<U>>::type;
+
+    template< 
+      template<class...>class L, 
+      template<class...>class B, 
+      template<class...>class D,
+      class l0,class...l,
+      class...d>
+    struct find< L<l0,l...>, B<>, D<d...> >
+      : find< L<l...>, 
+              B<N<1>>,
+              D<d...,l0>>
+    {};
+
+    using bits = typename find< Decay<U> >::type;
+    using idx = Bits2Idx<bits>;
+    using type = Copy< Decay<U> , idx >  ;   
+
 };
 
 
@@ -664,10 +702,13 @@ template<class L,template<class,class> class P=std::is_same>
 using DistinctIdx = typename Distinct_t< Decay<L>, P >::idx;
 
 template<class L,template<class,class>class P=std::is_same>
-using UniqueIdx= DistinctIdx< Enumerate<L>, checkTail<P>::template type >;
+using UniqueIdx= typename Unique_t<Decay<L>,P>::idx;
 
 template<class L,template<class,class>class P=std::is_same>
-using Unique= Copy<L,UniqueIdx<L,P> >;
+using UniqueBits= typename Unique_t<Decay<L>,P>::bits;
+
+template<class L,template<class,class>class P=std::is_same>
+using Unique= typename Unique_t<Decay<L>,P>::type;
 
 template<class L,class Set,template<class,class> class P=std::is_same>
 using Complement = NotIn<L,Set,P>;
@@ -686,6 +727,9 @@ using Meet = Find<L,R,P>;
 
 template<class L,class R,template<class,class> class P=std::is_same>
 using MeetIdx = FindIdx<L,R,P>;
+
+template<class L,class R,template<class,class> class P=std::is_same>
+using MeetBits = FindBits<L,R,P>;
 
 template<class L,class R,template<class,class> class P=std::is_same>
 using Diff = NotIn<R,L,P>;
@@ -785,6 +829,9 @@ template<class F>
 constexpr auto flat(F f){
     return tupleAdapter<F>(f);
 }
+
+
+
 
 
 

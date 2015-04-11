@@ -108,7 +108,23 @@ Describe(vtlTestcase)
       Assert::That(is_same< Enumerate<L2> , L3 >::value);
     };
 
-    /* ToDO : write tests for  Set(Union/meet/complement) operations and "idx" and "bits" variants */
+    It(should_pass_set_operation){
+      using L1 = NumList<0,1,1,2,3,2,6>;
+      using L2 = NumList<0,1,2,3,4,5,7>;
+
+      Assert::That(is_same<Distinct<L1>,NumList<0,3,6>>::value);
+      Assert::That(is_same<Unique<L1>,NumList<0,1,2,3,6>>::value);
+      Assert::That(is_same<Complement<L1,L2>,NumList<4,5,7>>::value);
+      Assert::That(is_same<Union<L1,L2>,NumList<0,1,2,3,6,4,5,7>>::value);
+      Assert::That(is_same<Meet<L1,L2>,NumList<0,1,2,3>>::value);
+      Assert::That(is_same<Diff<L2,L1>,NumList<4,5,7>>::value);
+
+      Assert::That(is_same<DistinctIdx<L1>,NumList<0,4,6>>::value);
+      Assert::That(is_same<UniqueIdx<L1>,NumList<0,1,3,4,6>>::value);
+      Assert::That(is_same<ComplementIdx<L1,L2>,NumList<4,5,6>>::value);
+      Assert::That(is_same<UnionIdx<L1,L2>,NumList<0,1,3,4,6,11,12,13>>::value);
+
+    };
 
 
   };  
@@ -237,8 +253,6 @@ Describe(vtlTestcase)
     };
 
   };
-
-
 
 };
 
