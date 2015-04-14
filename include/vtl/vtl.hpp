@@ -461,6 +461,10 @@ struct Copy_t<L<l0,l...>,R<I...>,D>{
 template<class L,class I, template<class...>class Dest=List>
 using Copy = typename Copy_t<Decay<L>, Decay<I>,Dest> ::type;
 
+template<class L,class I>
+constexpr auto copy(L,I){
+  return Copy<L,I>();
+}
 
 
 struct makeTuple_t{
@@ -743,8 +747,19 @@ using SymDiff = Complement< Meet<L,R,P>  , Union<L,R,P> ,P>;
 template<class L,class R,template<class,class> class P=std::is_same>
 using SymDiffIdx = ComplementIdx< Meet<L,R,P>  , Union<L,R,P> ,P>;
 
+template<class L,class R>
+constexpr auto diff(L,R){
+  return Diff<L,R>();
+}
 
-
+template<
+  template<class...> class L,
+  template<class...> class LI, 
+  class...T,
+  class...i>
+constexpr auto remove( L<T...> List, LI<i...> removedIdx){
+  return copy(List, diff( range(count(List)), removedIdx) );
+}
 
 
 
@@ -834,6 +849,44 @@ constexpr auto flat(F f){
 
 
 
+
+template<class...> 
+struct Overload;
+
+template<class F> 
+struct Overload<F> {
+  Overload(F&&f) : f(std::forward<F>(f)) { }
+
+  template <typename... Args>
+  auto operator()(Args&&... args) const 
+  -> decltype(std::declval<F>()(std::forward<Args>(args)...)) {
+    return f(std::forward<Args>(args)...);
+  }
+
+private:
+  F f;
+};
+
+template<class F0, class...F>
+struct Overload<F0, F...> 
+  : Overload<F0>, Overload<F...> {
+
+  Overload(F0&&f0, F&&...f) :  
+    Overload<F0>(std::forward<F0>(f0)),
+    Overload<F...>(std::forward<F>(f)...)
+  {}
+
+  using Overload<F0>::operator();
+  using Overload<F...>::operator();
+
+};
+
+template <typename... F>
+auto overload(F&&...f){
+  return Overload<F...>{ 
+    std::forward<F>(f)... 
+  };
+}
 
 }
 

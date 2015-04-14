@@ -124,6 +124,7 @@ Describe(vtlTestcase)
       Assert::That(is_same<ComplementIdx<L1,L2>,NumList<4,5,6>>::value);
       Assert::That(is_same<UnionIdx<L1,L2>,NumList<0,1,3,4,6,11,12,13>>::value);
 
+
     };
 
 
