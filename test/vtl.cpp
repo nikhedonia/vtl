@@ -21,6 +21,8 @@ Describe(vtlTestcase)
     It(should_have_working_extractors){
       Assert::That( _<0>(1,2,3,4) , Equals(1) );
       Assert::That( _<3>(1,2)(3,4) , Equals(4) );
+      Assert::That( _<0,int>(1.2f,2,3,4) , Equals(1) );
+      Assert::That( _<3,int>(1,2)(3)(4.1) , Equals(4) );
     };
   };
 
