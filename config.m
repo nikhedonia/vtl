@@ -1,7 +1,7 @@
-CXXLIST     :=g++ /usr/lib/gcc-snapshot/bin/g++ clang++-3.5
-CC          :=clang++-3.5
-CXX         :=clang++-3.5
-ANA         :=clang++-3.5
+CXXLIST     :=g++ /usr/lib/gcc-snapshot/bin/g++ clang++-3.6
+CC          :=clang++-3.6
+CXX         :=clang++-3.6
+ANA         :=clang++-3.6
 TARGET      :=Debug
 
 

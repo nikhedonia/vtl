@@ -17,9 +17,10 @@ build/Debug/obj/test/vtl.cpp.o:= test/vtl.cpp include/igloo/igloo_alt.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/postypes.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/cwchar \
   /usr/include/wchar.h /usr/include/stdio.h \
-  /usr/include/clang/3.5.0/include/stdarg.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/stdarg.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/clang/3.5.0/include/stddef.h /usr/include/xlocale.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/stddef.h \
+  /usr/include/xlocale.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/exception \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/atomic_lockfree_defines.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/exception_ptr.h \
@@ -42,7 +43,7 @@ build/Debug/obj/test/vtl.cpp.o:= test/vtl.cpp include/igloo/igloo_alt.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/ptr_traits.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/predefined_ops.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/cstdint \
-  /usr/include/clang/3.5.0/include/stdint.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/stdint.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/include/stdint.h \
   /usr/include/stdint.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/localefwd.h \
@@ -170,13 +171,14 @@ build/Debug/obj/test/vtl.cpp.o:= test/vtl.cpp include/igloo/igloo_alt.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/limits \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/random.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/x86_64-linux-gnu/c++/4.9/bits/opt_random.h \
-  /usr/include/clang/3.5.0/include/x86intrin.h \
-  /usr/include/clang/3.5.0/include/ia32intrin.h \
-  /usr/include/clang/3.5.0/include/immintrin.h \
-  /usr/include/clang/3.5.0/include/mmintrin.h \
-  /usr/include/clang/3.5.0/include/xmmintrin.h \
-  /usr/include/clang/3.5.0/include/mm_malloc.h \
-  /usr/include/clang/3.5.0/include/emmintrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/x86intrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/ia32intrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/immintrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/mmintrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/xmmintrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/mm_malloc.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/emmintrin.h \
+  /usr/lib/llvm-3.6/bin/../lib/clang/3.6.0/include/adxintrin.h \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/random.tcc \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/numeric \
   /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/stl_numeric.h \

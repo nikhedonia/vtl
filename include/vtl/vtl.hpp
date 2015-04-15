@@ -172,7 +172,7 @@ template<char...X> constexpr auto operator "" _N(){
     return N<C2N( (X-'0')... )>();
 }
 
-template<int i>
+template<int i,class T=void>
 struct Extractor{
   static constexpr int argNum=i;
   constexpr Extractor(){}
@@ -182,17 +182,24 @@ struct Extractor{
 
   template<int j=i,class x0,class...x>
   constexpr static auto eval(x0, x&&...X)
-  -> typename enable_if< j ,
-                         decltype(Extractor<j-1>::template eval<j-1>(forward<x>(X)...))>
+  -> typename enable_if< !!j ,
+                         decltype(Extractor<j-1,T>()(forward<x>(X)...))>
   ::type {
-    return Extractor<j-1>::eval(forward<x>(X)...);
+    return Extractor<j-1,T>()(forward<x>(X)...);
   }
 
   template<int j=i,class x0,class...x>
   constexpr static auto eval(x0&&X0,x...)
-  -> typename enable_if< !j ,
-                         decltype(forward<x0>(X0)) >
-  ::type {
+  -> typename enable_if<!j && std::is_same<T,void>::value,
+                        decltype(forward<x0>(X0)) >::type {
+    return forward<x0>(X0);
+  }
+
+
+  template<int j=i,class x0,class...x>
+  constexpr static auto eval(x0&&X0,x...)
+  -> typename enable_if< !j && !std::is_same<T,void>::value ,
+  T>::type {
     return forward<x0>(X0);
   }
 
@@ -200,11 +207,11 @@ struct Extractor{
 
   template<int=i>
   constexpr static auto eval() {
-    return Extractor<i>();
+    return Extractor<i,T>();
   }
 
   template<class...x>
-  constexpr auto operator()(x...X)const
+  constexpr auto operator()(x&&...X)const
   -> decltype(this->eval(forward<x>(X)...)) {
     return this->eval(forward<x>(X)...);
   }
@@ -267,8 +274,8 @@ struct ListExtractor : Z<0>{
 
 
 
-template<int i>
-using _=Extractor<i>;
+template<int i,class T=void>
+constexpr auto _=Extractor<i,T>();
 
 
 template<class L,uint i>
@@ -855,10 +862,10 @@ struct Overload;
 
 template<class F> 
 struct Overload<F> {
-  Overload(F&&f) : f(std::forward<F>(f)) { }
+  constexpr Overload(F&&f) : f(std::forward<F>(f)) { }
 
   template <typename... Args>
-  auto operator()(Args&&... args) const 
+  constexpr auto operator()(Args&&... args) const 
   -> decltype(std::declval<F>()(std::forward<Args>(args)...)) {
     return f(std::forward<Args>(args)...);
   }
@@ -871,7 +878,7 @@ template<class F0, class...F>
 struct Overload<F0, F...> 
   : Overload<F0>, Overload<F...> {
 
-  Overload(F0&&f0, F&&...f) :  
+  constexpr Overload(F0&&f0, F&&...f) :  
     Overload<F0>(std::forward<F0>(f0)),
     Overload<F...>(std::forward<F>(f)...)
   {}
@@ -882,11 +889,16 @@ struct Overload<F0, F...>
 };
 
 template <typename... F>
-auto overload(F&&...f){
+constexpr auto overload(F&&...f){
   return Overload<F...>{ 
     std::forward<F>(f)... 
   };
 }
+
+
+
+
+
 
 }
 

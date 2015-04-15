@@ -13,8 +13,17 @@ constexpr float addOneFloat(int x){
 }
 
 
+
 Describe(vtlTestcase)
 {
+
+  Describe(ExtractorTests){
+    It(should_have_working_extractors){
+      Assert::That( _<0>(1,2,3,4) , Equals(1) );
+      Assert::That( _<3>(1,2)(3,4) , Equals(4) );
+    };
+  };
+
 
   Describe(IntegralConstantTests){
 
@@ -26,6 +35,7 @@ Describe(vtlTestcase)
     };
 
   };
+
 
   Describe(TypeListTests){
 
