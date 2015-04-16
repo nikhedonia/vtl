@@ -6,28 +6,50 @@
 
 namespace vtl {
 
+template<class F>
+struct LambdaWrapper
+{
+  template<class... Ts>
+  decltype(auto) operator()(Ts&&... xs) const {
+    return reinterpret_cast<const F&>(*this)(std::forward<Ts>(xs)...);
+  }
+};
+
+struct wrapper_factor{
+  template<class F>
+  constexpr LambdaWrapper<F> operator += (F*){
+    return {};
+  }
+};
+
+struct addr_add{
+};
 
 template<class T>
-constexpr auto extractInlineStruct(T const F){
-    using S= decltype(F());
-    return S();
+  typename std::remove_reference<T>::type*
+  operator+(addr_add, T &&t) {
+    return &t;
+  }
+
+template<class T>
+constexpr auto unwrapHidden(T){
+  return decltype(T()())();
 }
 
+#define staticLambda(L) (wrapper_factor() += true? nullptr : (addr_add() + L)   )
 
-#define vtlInlineStruct(STRUCT)\
-    extractInlineStruct([](){\
-        struct self\
-        STRUCT;\
-        return self();\
-    })
+#define vtlLambdaStruct(S) unwrapHidden(staticLambda([](){\
+  struct hidden{\
+    S \
+  };\
+  return hidden(); \
+}))
 
-#define vtlLambda(FUNC)\
-    vtlInlineStruct({\
-        constexpr self(){}\
-        constexpr self(self const&){}\
-        constexpr self operator|(int) { return *this; }\
-        constexpr auto operator() FUNC\
-    })
+#define vtlLambda(L) vtlLambdaStruct(\
+  constexpr hidden(){}\
+  constexpr decltype(auto) operator() L \
+)
+
 
 template<class T>
 constexpr T Obj(...);
@@ -93,14 +115,12 @@ struct Fold
   constexpr Fold(op OP): OP(OP){}
 
   template<class X>
-  constexpr auto operator()(X&&x)const
-  -> decltype( forward<X>(x) ){
+  constexpr decltype(auto) operator()(X&&x)const{
     return forward<X>(x);
   }
 
   template<class X0,class...X>
-  constexpr auto operator()(X0&&x0,X&&...x)const
-  -> decltype(OP( forward<X0>(x0) , (*this)(forward<X>(x)...) )){
+  constexpr decltype(auto) operator()(X0&&x0,X&&...x)const{
     return    OP( forward<X0>(x0) , (*this)(forward<X>(x)...) );
   }
 };
@@ -174,10 +194,9 @@ template<char...X> constexpr auto operator "" _N(){
 
 template<int i,class T=void>
 struct Extractor{
-  static constexpr int argNum=i;
+  //static constexpr int argNum=i;
   constexpr Extractor(){}
   constexpr Extractor(Extractor const&){}
-
 
 
   template<int j=i,class x0,class...x>
@@ -215,12 +234,14 @@ struct Extractor{
   -> decltype(this->eval(forward<x>(X)...)) {
     return this->eval(forward<x>(X)...);
   }
-
+/*
   constexpr explicit operator int()const{
     return argNum;
   }
-
+*/
 };
+
+
 
 template<class...X> struct List{
     using type = List<X...>;
@@ -275,14 +296,14 @@ struct ListExtractor : Z<0>{
 
 
 template<int i,class T=void>
-constexpr auto _=Extractor<i,T>();
+const constexpr static auto _= Extractor<i,T>();
 
 
 template<class L,uint i>
 using Get = typename ListExtractor<i>::template type<L>;
 
 template<uint i,class L>
-constexpr auto get(L){ return Get<L,i>(); }
+constexpr static auto get(L){ return Get<L,i>(); }
 
 
 template<class L,class F, template<class...>class R, class...I>
@@ -783,7 +804,7 @@ constexpr auto tupleCall(T&&tup,F&&f){
 
 template<class T,class C>
 constexpr auto tupleKeep(T&&tup, C c){
-    return tupleApply(forward<T>(tup), makeTuple, bitmask2Idx(c) );
+    return tupleCall(forward<T>(tup), makeTuple, bits2Idx(c) );
 }
 
 template<class T,class F,template<class...>class range, class...I>
@@ -895,7 +916,162 @@ constexpr auto overload(F&&...f){
   };
 }
 
+template<class T,uint...n>
+struct arrayInfo{
+  using dims = NumList<n...>;
+};
 
+
+template<class T,uint m, uint...n>
+struct arrayInfo<T[m],n...>
+  :arrayInfo<decltype(Obj<T>()[0]),n...,m>
+{};
+
+template<class T>
+constexpr decltype(auto) indexCall(T&&Data){
+  return Data;
+}
+
+template<class T,class X,class...Xs>
+constexpr decltype(auto) indexCall(T&&Data,X&&x,Xs&&...xs){
+  return indexCall(Data[x],forward<Xs>(xs)...);
+}
+
+template<class...>
+struct Expr{
+  constexpr Expr(){}
+  constexpr void operator()()const{}
+};
+
+template<class OP>
+struct Expr<OP>{
+  OP op;
+  constexpr Expr(OP&&op):op(forward<OP>(op)){}
+
+
+  constexpr decltype(auto) operator()()const{
+    return op;
+  }
+
+};
+
+template<class OP,class...X>
+struct Expr<OP,X...>{
+  OP op;
+  std::tuple<X...> Data;
+  constexpr Expr(OP&&op,X&&...x)
+    :op(forward<OP>(op))
+    ,Data(forward<X>(x)...)
+  {}
+
+  constexpr decltype(auto) operator()()const{
+    return tupleCall(Data,op);
+  }
+};
+
+template<class...X>
+constexpr auto expr(X...x){ 
+  return Expr<X...>(forward<X>(x)...); 
+}
+
+
+template<class A,class...B>
+constexpr auto operator+(A&&lhs,Expr<B...>rhs){
+  return expr(BinFold(+),forward<A>(lhs),rhs);
+}
+
+template<class A,class...B>
+constexpr auto operator+(Expr<B...> lhs, A&&rhs){
+  return expr(BinFold(+),lhs,forward<A>(rhs));
+}
+
+template<class...A,class...B>
+constexpr auto operator+(Expr<A...>lhs, Expr<B...>rhs){
+  return expr(BinFold(+),lhs,rhs);
+}
+
+
+
+/*
+template<uint ID=0, bool Up=0, bool Down=0>
+struct Index{
+  static constexpr auto id(){ return N<ID>(); }
+  static constexpr bool up(){ return N<Up>(); }
+  static constexpr bool down(){ return N<Down>(); }
+  constexpr Index(){}
+  
+  constexpr auto operator+()const{ return Index<ID,1,0>(); }
+  constexpr auto operator-()const{ return Index<ID,0,1>(); }
+  constexpr auto operator*()const{ return Index<ID,1,1>(); }
+  constexpr auto operator&()const{ return Index<ID,0,0>(); } 
+
+};
+
+template<class LHS,class RHS>
+constexpr bool isSummable(LHS lhs,RHS rhs){
+  return (lhs.id() == rhs.id() ) && ( (lhs.up() && rhs.down() ) || (lhs.down() && rhs.up() ) );
+}
+
+template<class I0,class...I>
+constexpr bool isFreeIndex(I0 i0,I...i){
+  return BinFold(&&)( !isSummable(i0,i)... );
+}
+
+template<template<class...>class L,class I0,class...I>
+constexpr bool isFreeIndex(I0 i0,L<I...> LI){
+  return BinFold(&&)( !isSummable(i0,I())... );
+}
+
+template<template<class...>class L,class...I,class...J>
+constexpr auto getFreeIndexes(L<J...> LI,I...i){
+  return NumList< isFreeIndex( _<J::value>(i...), copy( List<I...>(), remove(LI, L<J>())) )...>();
+}
+
+template<class...I>
+constexpr auto getFreeIndexes(I...i){
+  return getFreeIndexes<List>(Range<0,sizeof...(i)>(), i...);
+}
+
+template<uint ID>
+constexpr auto _I=Index<ID>();
+
+struct Negate_t{
+  constexpr Negate_t(){}
+  template<class T>
+  constexpr auto operator()(T X)const{
+    return !X;
+  }
+};
+
+constexpr Negate_t Negate;
+
+template<class...idx>
+struct EinsteinCompiler{
+  constexpr static auto freeIdxBits(){
+    return getFreeIndexes(idx()...);
+  }
+
+  constexpr static auto summableIdxBits(){
+    return tupleMap(freeIdxBits() , Negate );
+  }
+
+  constexpr static auto freeIdx(){
+    return tupleKeep(List<idx...>(), freeIdxBits() );
+  }
+
+  constexpr static auto summableIdx(){
+    return tupleKeep(List<idx...>(), summableIdxBits() );
+  }
+
+  constexpr static auto compile(){
+    constexpr auto uint c=count(unique( tupleMap( freeIdx() , [](auto i){
+      return i.id();
+    })));
+
+    return Range<0,c>
+
+  }
+*/
 
 
 

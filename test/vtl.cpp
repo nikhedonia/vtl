@@ -2,6 +2,7 @@
 #include<vtl/vtl.hpp>
 #include<type_traits>
 #include<tuple>
+#include<vector>
 
 using namespace igloo;
 using namespace vtl;
@@ -16,13 +17,24 @@ constexpr float addOneFloat(int x){
 
 Describe(vtlTestcase)
 {
+  Describe(ConstexprLambda){
+    It(should_allowConstexprLambdas){
+
+      constexpr auto y = vtlLambda( (int i)const{ return i; } );
+      constexpr auto z=N<y(1)>();
+      Assert::That((uint)z,Equals(1) );
+   
+    };
+  };
 
   Describe(ExtractorTests){
     It(should_have_working_extractors){
+      
       Assert::That( _<0>(1,2,3,4) , Equals(1) );
       Assert::That( _<3>(1,2)(3,4) , Equals(4) );
       Assert::That( _<0,int>(1.2f,2,3,4) , Equals(1) );
       Assert::That( _<3,int>(1,2)(3)(4.1) , Equals(4) );
+
     };
   };
 
@@ -37,6 +49,7 @@ Describe(vtlTestcase)
     };
 
   };
+
 
 
   Describe(TypeListTests){
@@ -241,7 +254,7 @@ Describe(vtlTestcase)
       
       tupleForeach(t4,flat([&i,Arr](auto a,auto b,auto c){
         Assert::That( Arr[i][0] , Equals(a) ); 
-        Assert::That( Arr[i][1] , Equals(b) ); 
+        Assert::That( Arr[i][1] , Equals(b) );
         Assert::That( Arr[i][2] , Equals(c) ); 
         ++i;
       }));
@@ -262,11 +275,8 @@ Describe(vtlTestcase)
       });
 
       Assert::That( get<1>(tup), Equals(42) );
-
     };
-
   };
-
 };
 
 int main(int argc, char const* argv[])
