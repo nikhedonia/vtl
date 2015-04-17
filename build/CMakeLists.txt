@@ -3,7 +3,7 @@ project(VTL)
 
 include_directories(../include)
 SET(CMAKE_CXX_COMPILER clang++-3.5)
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++1y -pg -Wno-deprecated-declarations" )
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++14 -pg -Wno-deprecated-declarations" )
 SET(CMAKE_CXX_LINK_FLAGS  "${CMAKE_CXX_LINK_FLAGS}" )
 
 

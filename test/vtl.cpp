@@ -23,9 +23,12 @@ Describe(vtlTestcase)
       constexpr auto y = vtlLambda( (int i)const{ return i; } );
       constexpr auto z=N<y(1)>();
       Assert::That((uint)z,Equals(1) );
-   
+
+
     };
   };
+
+
 
   Describe(ExtractorTests){
     It(should_have_working_extractors){
