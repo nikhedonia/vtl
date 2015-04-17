@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "macro.hpp"
 #include "expr.hpp"
+#include "fold.hpp"
 
 namespace vtl{
 
@@ -45,6 +46,17 @@ constexpr decltype(auto) inject(T&&Data,L<I...>,X&&...x){
 template<class...X>
 struct ExtractorExpr;
 
+template<class...X>
+constexpr auto makeExtractorExpr(X&&...x){
+  return ExtractorExpr<X...>(forward<X>(x)...);
+}
+
+  #define ExtractorExprAssigment(OP)\
+  template<class rhs>\
+  constexpr auto operator OP(rhs&&RHS)const{\
+    return makeExtractorExpr( BinFold(OP) , *this, forward<rhs>(RHS) );\
+  }
+
 template<class OP,class...X>
 struct ExtractorExpr<OP,X...>{
   OP op;
@@ -67,11 +79,12 @@ struct ExtractorExpr<OP,X...>{
     return tupleCall( inject( Data, range(count(Data)) , forward<Args>(args)... ) , op );
   }
 
+  CREATE_ASSIGMENT_OPERATORS(ExtractorExprAssigment)
+
 };
 
 template<int i,class T=void>
 struct Extractor{
-  //static constexpr int argNum=i;
 
   using ExprTag = expressive::ExprTagHandler<vtl::ExtractorExpr>;
   using ExtractorTag = bool;
@@ -111,11 +124,9 @@ struct Extractor{
   constexpr decltype(auto) operator()(x&&...X)const {
     return this->eval(forward<x>(X)...);
   }
-/*
-  constexpr explicit operator int()const{
-    return argNum;
-  }
-*/
+
+  CREATE_ASSIGMENT_OPERATORS(ExtractorExprAssigment)
+
 };
 
 template<class F,class...X>

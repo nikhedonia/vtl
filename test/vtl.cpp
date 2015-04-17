@@ -37,15 +37,17 @@ Describe(vtlTestcase)
       Assert::That( _<0,int>(1.2f,2,3,4) , Equals(1) );
       Assert::That( _<3,int>(1,2)(3)(4.1) , Equals(4) );
 
-      constexpr auto x = _<1>+1;
-       auto z = 2;
+
+      auto z = 2;
       Assert::That( z , Equals(2) );
       Assert::That(vtl::bind(_<0>,_<1>+1)(1,2), Equals(3) );
 
       _<1>(1,_<0>(z),1)=32;
-       Assert::That( z , Equals(32) );
+      Assert::That( z , Equals(32) );
       vtl::bind([](auto& x,auto y){x=14+y;} , z,_<0> )(12);
-       Assert::That( z , Equals(26) );
+      Assert::That( z , Equals(26) );
+      (_<1> =_<1>+_<0>+1)(z,z);
+      Assert::That( z, Equals(53));
 
     };
   };

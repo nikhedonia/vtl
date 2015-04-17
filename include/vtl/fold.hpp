@@ -43,6 +43,7 @@ struct BinaryOp<CHAR(OP)>\
 };
 
 CREATE_ALL_OPERATORS(CREATE_BinaryOP_struct)
+CREATE_ASSIGMENT_OPERATORS(CREATE_BinaryOP_struct)
 
 
 
