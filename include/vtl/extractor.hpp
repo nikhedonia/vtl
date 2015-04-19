@@ -70,13 +70,13 @@ struct ExtractorExpr<OP,X...>{
 
   template<class...Args>
   constexpr auto operator()(Args&&...args)const{
-    return tupleCall( inject( Data, range(count(Data)) , forward<Args>(args)... ) , op );
+    return tupleCall( inject( Data, rangeOf(Data) , forward<Args>(args)... ) , op );
   }
 
 
   template<class...Args>
   constexpr auto operator()(Args&&...args){
-    return tupleCall( inject( Data, range(count(Data)) , forward<Args>(args)... ) , op );
+    return tupleCall( inject( Data, rangeOf(Data) , forward<Args>(args)... ) , op );
   }
 
   CREATE_ASSIGMENT_OPERATORS(ExtractorExprAssigment)

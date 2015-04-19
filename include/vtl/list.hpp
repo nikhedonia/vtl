@@ -162,7 +162,7 @@ template<
   class...T,
   class...i>
 constexpr auto remove( L<T...> List, LI<i...> removedIdx){
-  return copy(List, diff( range(count(List)), removedIdx) );
+  return copy(List, diff( rangeOf(List), removedIdx) );
 }
 
 
