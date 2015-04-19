@@ -79,9 +79,18 @@ using SymDiff = Complement< Meet<L,R,P>  , Union<L,R,P> ,P>;
 template<class L,class R,template<class,class> class P=std::is_same>
 using SymDiffIdx = ComplementIdx< Meet<L,R,P>  , Union<L,R,P> ,P>;
 
-template<class L,class R>
+//ToDo : add a function for sorting...
+
+
+
+template<template<class,class>class P=std::is_same,class L,class R>
 constexpr auto diff(L,R){
-  return Diff<L,R>();
+  return Diff<L,R,P>();
+}
+
+template<template<class,class>class P=std::is_same,class L>
+constexpr auto distinct(L){
+  return Distinct<L,P>();
 }
 
 }

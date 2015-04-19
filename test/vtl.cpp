@@ -47,7 +47,7 @@ Describe(vtlTestcase)
       vtl::bind([](auto& x,auto y){x=14+y;} , z,_<0> )(12);
       Assert::That( z , Equals(26) );
       (_<1> =_<1>+_<0>+1)(z,z);
-      Assert::That( z, Equals(53));
+      Assert::That( z, Equals(52) );
 
     };
   };

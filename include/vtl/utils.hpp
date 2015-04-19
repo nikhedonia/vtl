@@ -15,6 +15,17 @@ namespace vtl{
   template<class T>
   using Decay = typename std::decay<T>::type;
 
+  struct Negate_t{
+    constexpr Negate_t(){}
+    template<class T>
+    constexpr auto operator()(T X)const{
+      return !X;
+    }
+  };
+
+  constexpr Negate_t Negate;
+
+
   template<class T>
   constexpr T Obj(...);
   template<class...x> void nop(x...){}
