@@ -116,7 +116,10 @@ using Count = typename Count_t<Decay<L>>::type;
 template<class L>
 constexpr auto count(L){ return Count<L>();}
 
-
+template<class L>
+constexpr auto rangeOf(L l){
+  return range(count(l));
+}
 
 
 template<
