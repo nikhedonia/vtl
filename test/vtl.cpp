@@ -4,6 +4,7 @@
 #include<tuple>
 #include<vector>
 #include<typeinfo>
+#include<chrono>
 
 using namespace igloo;
 using namespace vtl;
@@ -295,9 +296,6 @@ Describe(vtlTestcase)
     };
   };
 
-  
-
-
 
   Describe(EinsteinTests){
     It(should_find_free_indexes){
@@ -310,35 +308,48 @@ Describe(vtlTestcase)
       Assert::That( is_same< NumList<1,1,1> , Decay<decltype(free1)>>::value );
       Assert::That( is_same< NumList<0,1,0> , Decay<decltype(free2)>>::value );
 
-      constexpr auto EinsteinLoop = makeEinstein( +I , +J , -I, -K , +J, +K ) ;
-
-      auto Data=[](auto i=-1,auto j=-1,auto k=-1,auto l=-1,auto m=-1,auto o=-1){ 
-        cout<<i<<j<<k<<l<<m<<o<<endl;
-        return 1; 
+      constexpr auto EinsteinLoop = makeEinstein( +I , +K , -J, +J, -I,-K, Index<5>() ) ;
+      
+      auto Data=[](auto i=-1,auto j=-1,auto k=-1,auto l=-1,auto m=-1,auto o=-1,auto p=-1)->double{ 
+        //cout<<i<<j<<k<<l<<m<<o<<p<<endl;
+        return i+j+k+l+m+o+1; 
       };
 
+      //EinsteinLoop(Data,make_tuple(3,3,3),9);
+
+/*
+      double res2=0;
+      auto start2 = std::chrono::system_clock::now();
+      for(int ii=0;ii<40000000;++ii){
+      //for(int i=0;i<1;++i){
+        for(int j=0;j<30;++j){
+          for(int k=0;k<5;++k){
+            for(int l=0;l<4;++l){
+              res2+= Data(j,k,l,l,j,k,9);
+            }
+          }        
+        }
+      }
+      auto end2= std::chrono::system_clock::now();
       
+      double res1=0;
+      auto start = std::chrono::system_clock::now();
+      cout<<endl;
+      for(int ii=0;ii<40000000;++ii){
+        res1+= EinsteinLoop(Data,make_tuple(30,5,4),9); //why the hell is this 20% faster????
+      }
+
+
+      auto end= std::chrono::system_clock::now();
+      cout<<"time"<<std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()<<endl;
       
-      /*constexpr*/ 
-      auto res=EinsteinLoop(
-        /*funcCall/indexCall,*/
-        Data,
-        make_tuple(3,2)/*bounds*/,
-        5 /*...freeIndexes*/ 
-      );
-      /* used indexes : (F=free; S=sum; C=const)
-generates indexes:
-Name  +I +J -I -K +J +K
-Type   S  F  S  S  F  S
-Bounds 3  C  3  2  C  2
-       0  5  0  0  5  0
-       0  5  0  1  5  1
-       1  5  1  0  5  0
-       1  5  1  1  5  1
-       2  5  2  0  5  0
-       2  5  2  1  5  1
-      */
-      cout<<res;
+
+
+
+      
+      cout<<"time"<<std::chrono::duration_cast<std::chrono::milliseconds>(end2-start2).count()<<endl;
+      cout<<endl<<res2<<"\n"<<res1<<endl;
+*/
     };
   };
 
