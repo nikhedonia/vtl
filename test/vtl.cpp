@@ -319,7 +319,25 @@ Describe(vtlTestcase)
 
       
       
-      /*constexpr*/ auto res=EinsteinLoop(Data, make_tuple(3,2) , 5 );
+      /*constexpr*/ 
+      auto res=EinsteinLoop(
+        /*funcCall/indexCall,*/
+        Data,
+        make_tuple(3,2)/*bounds*/,
+        5 /*...freeIndexes*/ 
+      );
+      /* used indexes : (F=free; S=sum; C=const)
+generates indexes:
+Name  +I +J -I -K +J +K
+Type   S  F  S  S  F  S
+Bounds 3  C  3  2  C  2
+       0  5  0  0  5  0
+       0  5  0  1  5  1
+       1  5  1  0  5  0
+       1  5  1  1  5  1
+       2  5  2  0  5  0
+       2  5  2  1  5  1
+      */
       cout<<res;
     };
   };
