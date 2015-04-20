@@ -3,6 +3,7 @@
 #include<type_traits>
 #include<tuple>
 #include<vector>
+#include<typeinfo>
 
 using namespace igloo;
 using namespace vtl;
@@ -47,7 +48,7 @@ Describe(vtlTestcase)
       vtl::bind([](auto& x,auto y){x=14+y;} , z,_<0> )(12);
       Assert::That( z , Equals(26) );
       (_<1> =_<1>+_<0>+1)(z,z);
-      Assert::That( z, Equals(52) );
+      Assert::That( z, Equals(53) );
 
     };
   };
@@ -277,12 +278,12 @@ Describe(vtlTestcase)
 
     };
 
+    
+
     It(should_pass_some_examples){
       
       auto tup = make_tuple(true,3,4,1.0f);
-      auto tup2 = make_tuple(5,6); 
       using T = decltype(tup);
-      using U = decltype(tup2);
 
       auto tiedInts = tupleCall(tup, makeTie, IndexOf<int,T,std::is_same>() ); //get references on the ints only
       //tupleCall(tup,flat(...),IndexOf<int,T>() )); should provide the same result...
@@ -293,6 +294,38 @@ Describe(vtlTestcase)
       Assert::That( get<1>(tup), Equals(42) );
     };
   };
+
+  
+
+
+
+  Describe(EinsteinTests){
+    It(should_find_free_indexes){
+      constexpr auto I=Index<0>();
+      constexpr auto J=Index<1>();
+      constexpr auto K=Index<2>();
+      constexpr auto free1    = getFreeIndexes( +I , +I , +I ) ; 
+      constexpr auto free2    = getFreeIndexes( +I , +J , -I ) ; 
+
+      Assert::That( is_same< NumList<1,1,1> , Decay<decltype(free1)>>::value );
+      Assert::That( is_same< NumList<0,1,0> , Decay<decltype(free2)>>::value );
+
+      constexpr auto EinsteinLoop = makeEinstein( +I , +J , -I, -K , +J, +K ) ;
+
+      auto Data=[](auto i=-1,auto j=-1,auto k=-1,auto l=-1,auto m=-1,auto o=-1){ 
+        cout<<i<<j<<k<<l<<m<<o<<endl;
+        return 1; 
+      };
+
+      
+      
+      /*constexpr*/ auto res=EinsteinLoop(Data, make_tuple(3,2) , 5 );
+      cout<<res;
+    };
+  };
+
+
+
 };
 
 int main(int argc, char const* argv[])

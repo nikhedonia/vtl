@@ -8,6 +8,7 @@ namespace vtl{
 
   using std::enable_if;
   using std::forward;
+  using std::forward_as_tuple;
   using std::get;
   using std::make_tuple;
   using std::conditional;
@@ -89,16 +90,32 @@ struct arrayInfo<T[m],n...>
   :arrayInfo<decltype(Obj<T>()[0]),n...,m>
 {};
 */
+struct IndexCall{
+  template<class T>
+  constexpr decltype(auto) operator()(T&&Data)const{
+    return Data;
+  }
 
-template<class T>
-constexpr decltype(auto) indexCall(T&&Data){
-  return Data;
-}
+  template<class T,class X,class...Xs>
+  constexpr decltype(auto) operator()(T&&Data,X&&x,Xs&&...xs)const{
+    return (*this)(Data[x],forward<Xs>(xs)...);
+  }
+};
 
-template<class T,class X,class...Xs>
-constexpr decltype(auto) indexCall(T&&Data,X&&x,Xs&&...xs){
-  return indexCall(Data[x],forward<Xs>(xs)...);
-}
+struct FuncCall{
+  constexpr FuncCall(){}
+  template<class T,class...Xs>
+  constexpr decltype(auto) operator()(T&&Data,Xs&&...xs)const{
+    return Data(forward<Xs>(xs)...);
+  }
+};
+
+constexpr auto indexCall = IndexCall();
+constexpr auto funcCall = FuncCall();
+
+
+
+
 
 
 }

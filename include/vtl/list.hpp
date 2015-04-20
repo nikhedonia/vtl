@@ -295,6 +295,19 @@ struct IndexOf_t<T,L<l...>,P>{
 template<class T,class L, template<class,class> class P=std::is_same>
 using IndexOf = typename IndexOf_t<T,Decay<L>,P>::type;
 
+template<template<class,class> class P=std::is_same, class L,class R>
+constexpr auto indexOf(L,R){
+  return IndexOf<L,R,P>();
+} 
+
+template<
+  template<class,class> class P=std::is_same, 
+  template<class...>class ListT,
+class R,class...L>
+constexpr auto indexOfEach(ListT<L...>,R){
+  return Concat<IndexOf<L,R,P>...>();
+} 
+
 template<class L,
          class R,
          template<class,class> class P=std::is_same>
@@ -345,6 +358,11 @@ using FindIdx= typename Find_t<Decay<L>,Decay<R>,P>::idx;
 
 template<class L,class R, template<class,class> class P=std::is_same>
 using Find= typename Find_t<Decay<L>,Decay<R>,P>::type;
+
+template<template<class,class> class P=std::is_same, class L,class R>
+constexpr auto find(L,R){
+  return FindIdx<L,R,P>();
+} 
 
 template<class L,class R>
 struct Zip_t{

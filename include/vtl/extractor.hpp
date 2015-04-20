@@ -38,7 +38,7 @@ template<
   class...I, 
   class...X>
 constexpr decltype(auto) inject(T&&Data,L<I...>,X&&...x){
-  return std::tuple<decltype(tryInject(get<I::value>(forward<T>(Data)),forward<X>(x)...))...>( 
+  return std::tuple<decltype(tryInject(get<I::value>(forward<T>(Data)),forward<X>(x)...))...>( //std::forward_as_tuple?
     tryInject(get<I::value>(forward<T>(Data)),forward<X>(x)...)... 
   );
 }
@@ -92,7 +92,7 @@ struct Extractor{
 
   constexpr Extractor(){}
   constexpr Extractor(Extractor const&){}
-
+  constexpr auto argNum()const{ return i; }
 
   template<int j=i,class x0,class...x>
   constexpr static auto eval(x0, x&&...X)

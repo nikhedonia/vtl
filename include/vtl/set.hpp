@@ -93,6 +93,11 @@ constexpr auto distinct(L){
   return Distinct<L,P>();
 }
 
+template<template<class,class>class P=std::is_same,class L>
+constexpr auto unique(L){
+  return Unique<L,P>();
+}
+
 }
 
 #endif

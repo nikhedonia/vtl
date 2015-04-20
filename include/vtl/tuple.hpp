@@ -22,6 +22,14 @@ struct makeTie_t{
     }
 };
 
+struct makeForwarded_t{
+    constexpr makeForwarded_t(){}
+    template<class...args>
+    constexpr auto operator()(args&&...Args)const{
+        return std::forward_as_tuple(std::forward<args>(Args)...);
+    }
+};
+
 struct makeList_t{
     constexpr makeList_t(){}
     template<class...args>
@@ -31,6 +39,7 @@ struct makeList_t{
 };
 
 constexpr auto makeTuple = makeTuple_t();
+constexpr auto makeForwarded = makeForwarded_t();
 constexpr auto makeTie   = makeTie_t();
 constexpr auto makeList  = makeList_t();
 
