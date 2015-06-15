@@ -1,6 +1,8 @@
 #VTL - variadic template library
 ##C++14 Library to work with tuples and variadic templates in a functional manner
 
+[![Join the chat at https://gitter.im/nikhedonia/vtl](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nikhedonia/vtl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 ###examples:
 
